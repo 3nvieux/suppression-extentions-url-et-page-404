@@ -1,2 +1,59 @@
-# suppression-extentions-url-et-page-404
-Tutoriel suppression des extensions d'URL et page 404
+## Tutoriel - Suppression des extensions d'URL et page 404
+
+Si vous avez un projet qui sera rendu public, il serait plus agréable de rajouter quelques petites choses simples mais user frendly. Une fois que c'est fait, c'est réutilisable sur tous vos projet web future. Ce tutoriel a pour but d'une **réécriture des URL en supprimant les extensions de fin** (monsite.com/connexion.php -> monsite.com/connexion) et l'ajout d'une **page 404 personnalisé** (en HTML ou PHP).
+
+## Activation du module de réécriture (httpd.conf)
+
+En premier lieu, nous allons ouvrier puis éditer dans le `httpd.conf` d'**Apache**. Sur XAMPP, il est trouvable dans `C:\xampp\apache\conf` ou sur son panel en cliquant sur **Config** puis **httpd.conf** sur la ligne d'Apache. Si vous n'utilisez pas XAMPP, le chemin devrait être semblable.
+
+<img width="500px" src="https://github.com/user-attachments/assets/e9c686dd-fed7-4a2d-bb8a-0b51edee0837" alt="XAMPP Config Apache httpd.conf" /><br>
+
+<img width="500px" src="https://github.com/user-attachments/assets/dd62ecd3-3236-4b6c-aa2f-67d4e66ea40f" alt=" httpd.conf " /><br>
+
+En cliquant dessus, cela nous ouvre un fichier avec **Bloc-notes** (ou autre). Recherchez ces 2 lignes :
+`#LoadModule rewrite_module modules/mod_rewrite.so`
+`#LoadModule headers_module modules/mod_headers.so`
+
+Remplacez aussi tout les `AllowOverride None` en `AllowOverride All`.
+
+**Supprimez les hashtags (#)** si existant, **sauvegardez-les** (`Ctrl + S`) et **relancez Apache**. Si tout est correct, le fichier devrais être pareil que [celui-ci.](https://privatebin.net/?5425338f1f14cf53#DSNSr7So59J3oKjTfDqTo8KmpMxrmautSmbcozCAqhgP)
+
+> Astuce : Vous pouvez ouvrir le fichier via **Word**, **VSCode**, sur le site ci dessus, puis faire `Ctrl + F` pour rechercher la ligne, ou télécharger et remplacer directement avec le lien. Le fichier faisant beaucoup trop de ligne, rechercher à l'œuil serais un enfer.
+
+## Implémentation du fichier (.htaccess)
+
+Le fichier `.htaccess` (sans extension) sera notre fichier servant à configurer la réécriture d'URL de même dossier et la redirection automatique voulu. **Il doit être créé et mis dans la racine du projet** et rendra possible la personnalisation d'URL en supprimant les extensions à la fin.
+
+```
+RewriteEngine On
+
+# Charger les fichiers .php sans extension
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [NC,L]
+
+# Charger les fichiers .html sans extension
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.*)$ $1.html [NC,L]
+
+# Rediriger vers 404.html (ou autres)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /monsite/404.html [L]
+```
+
+Ce fichier nous permet de faire les mêmes choses qu'avant :
+  - L'utilisateur ne verra **pas d'extension à la fin d'une URL**
+  - On peut **rediriger l'utilisateur** sur le lien personnalisé comme exemple ceci (.ext étant n'importe quelle extension) :
+    - `<a href="connexion">Lien redirigeant sur la page connexion.ext</a> `
+    - `header("Location: home")`
+    - `<form method="POST" action="home">`
+
+> Note : Il est toujours possible de mettre comme exemple `home.ext`, mais l'URL affichera l'extention.
+
+<img width="250px" src="https://github.com/user-attachments/assets/8b47f04e-d1f7-4e7a-9188-4d2abe51f341" alt="localhost/monsite/home.php" /><br>
+
+<img width="250px" src="https://github.com/user-attachments/assets/a177e12f-adca-4012-88c3-b971d534e7ed" alt="localhost/monsite/home" /><br>
+
+**Ces deux liens marchent** l'un autant que l'autre, mais il est nécessaire de préciser dans le code lequel on appelle.
+
+Pour la page 404, c'est beaucoup plus facile. Il suffit juste de créer un fichier nommé `404.ext` avec l'extension au choix selon le fichier `.htaccess`. Il est **recommandé de le mettre à la racine du projet** pour que comme exemple si l'utilisateur, peu importe ou il ira (monsite/ces/dossiers/nexiste/pas), une redirection avec un slash dans le fichier `404.ext` pour qu'il ait toujours accès au assets (CSS, images...), comme exemple `<link rel="stylesheet" href="/monsite/assets/css/baseStyle.css"/>`.
